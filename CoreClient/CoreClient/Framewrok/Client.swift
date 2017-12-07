@@ -21,11 +21,11 @@ import Foundation
  Store (if these are not provided by the client configuration instance passed to the method) leaving other state intact.
  */
 open class Client : NSObject, ClientProtocol, ServiceDelegate {
-    private static let dataRequestQueueIdentifier: String =     "com.adeona.client.CoreClient.dataRequestQueue"
-    private static let uploadRequestQueueIdentifier: String =   "com.adeona.client.CoreClient.uploadRequestQueue"
-    private static let downloadRequestQueueIdentifier: String = "com.adeona.client.CoreClient.downloadRequestQueue"
-    private static let houseKeepingQueueIdentifier: String =    "com.adeona.client.CoreClient.housekeepingQueue"
-    private static let serviceDelegateQueueIdentifier: String = "com.adeona.client.CoreClient.serviceDelegateQueue"
+    private static let dataRequestQueueIdentifier: String =     "com.CoreClient.Client.dataRequestQueue"
+    private static let uploadRequestQueueIdentifier: String =   "com.CoreClient.Client.uploadRequestQueue"
+    private static let downloadRequestQueueIdentifier: String = "com.CoreClient.Client.downloadRequestQueue"
+    private static let houseKeepingQueueIdentifier: String =    "com.CoreClient.Client.housekeepingQueue"
+    private static let serviceDelegateQueueIdentifier: String = "com.CoreClient.Client.serviceDelegateQueue"
     
     public var clientConfiguration: ClientConfiguration?
     ///The callbackQueue can be either an instance of NSOperationQueue or dispatch_queue_t i.e. GCD queue.
@@ -285,7 +285,7 @@ open class Client : NSObject, ClientProtocol, ServiceDelegate {
     }
     
     
-    func executeClientCompletionHandler(_ completionHandler: ClientCompletionHandler?, data: AnyObject?, error: Error?) {
+    public func executeClientCompletionHandler(_ completionHandler: ClientCompletionHandler?, data: AnyObject?, error: Error?) {
         if callbackQueue is OperationQueue {
             callbackQueue?.addOperation({
                 completionHandler!(data, error)
@@ -309,15 +309,15 @@ open class Client : NSObject, ClientProtocol, ServiceDelegate {
         }
     }
     
-    public func lookupDomainWithServiceMethod(_ domainName: String?, serviceMethod: Selector?) -> ClientTask? {
+    open func lookupDomain(_ domainName: String?, WithServiceMethod serviceMethod: Selector?) -> ClientTask? {
+        return nil
+    }
+
+    open func doAPIHandshakeWithServiceMethod(_ serviceMethod: Selector?) -> ClientTask? {
         return nil
     }
     
-    public func doAPIHandshakeWithServiceMethod(_ serviceMethod: Selector?) -> ClientTask? {
-        return nil
-    }
-    
-    //MARK: ServiceDelegate methods
+    //MARK: - ServiceDelegate methods
     public func serviceCanProceed() -> Bool {
         return true
     }

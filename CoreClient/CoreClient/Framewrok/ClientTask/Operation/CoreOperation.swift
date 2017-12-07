@@ -26,23 +26,23 @@ import Foundation
 //TODO: I think, this needs to be moved to OperationPrivate; review thoroughly once.
 open class CoreOperation: Operation, OperationProtocol {
     //An identifier that uniquely identifies a given operation instance.
-    var operationID: String?
+    public var operationID: String?
     /*
      The data associated with the operation. It can be anything for e.g. if the request is regarding fetching subfolders or file versions
      then this can a File instance. If the request is for login, this can be an array comprising username, password, serverUrl in that order.
      */
-    var opData: AnyObject?
+    public var opData: AnyObject?
     //The timestamp when the reuest is being submitted to the DataStore for the execution.
-    var timestamp: TimeInterval = -1
-    var serviceMethod: Selector?
-    var completionHandler: ClientCompletionHandler?
-    var progressHandler: ClientProgressHandler?
-    var secondaryCompletionHandlers: NSMutableArray?
-    var secondaryProgressHandlers: NSMutableArray?
-    var client: Client?
-    var wrapperTask: ClientTask?   //The task instance which wraps this operation.
+    public var timestamp: TimeInterval = -1
+    public var serviceMethod: Selector?
+    public var completionHandler: ClientCompletionHandler?
+    public var progressHandler: ClientProgressHandler?
+    public var secondaryCompletionHandlers: NSMutableArray?
+    public var secondaryProgressHandlers: NSMutableArray?
+    public var client: Client?
+    public var wrapperTask: ClientTask?   //The task instance which wraps this operation.
     
-    override init() {
+    override public init() {
         super.init()
         operationID = String.init(format: "%s@%ld@%f", object_getClassName(self), self.hash, Date(timeIntervalSinceReferenceDate: NSTimeIntervalSince1970) as CVarArg)
         secondaryProgressHandlers = NSMutableArray()

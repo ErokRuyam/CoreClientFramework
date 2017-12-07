@@ -51,4 +51,6 @@ open class ClientConfiguration {
     public var persistentStore: PersistentStoreProvider?
     
     public var serverURL: String?
+    
+    public init () {}
 }

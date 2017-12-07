@@ -13,10 +13,10 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
     public var backgroundSession: URLSession?
     public var wTaskTable: NSMapTable<URLSessionTask, AnyObject>?
     public var serviceError: NSError?
+    public var defaultSessionConfiguration: URLSessionConfiguration = .default
     
     required public init(theServiceConfiguration: ServiceConfiguration) {
         super.init(theServiceConfiguration: theServiceConfiguration)
-        let defaultSessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default
         /*
          If needed, set the following params:
          cookie accept policy: HTTPCookieAcceptPolicy to - NSHTTPCookieAcceptPolicyAlways
@@ -26,23 +26,25 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
         wTaskTable = NSMapTable<URLSessionTask, AnyObject>.weakToStrongObjects()
     }
     
-    public func prepareRequest(_ request: NSMutableURLRequest?, errorHandler: ErrorHandler?) -> Bool {
+    open func prepareRequest(_ request: NSMutableURLRequest?, errorHandler: ErrorHandler?) -> Bool {
         if !(delegate?.serviceCanProceed())! {
             if let errorHndlr = errorHandler {
-                let error = NSError.init(domain: ServiceConstants.SCServiceDomain, code: 0, userInfo: nil)
+                let error = NSError.init(domain: CoreServiceConstants.CSCServiceDomain, code: 0, userInfo: nil)
                 errorHndlr(error)
             }
             return false
         }
 
-        UIApplication.shared.isNetworkActivityIndicatorVisible = true
+        DispatchQueue.main.async {
+            UIApplication.shared.isNetworkActivityIndicatorVisible = true
+        }
 
-        request?.timeoutInterval = TimeInterval(ServiceConstants.SCDefaultRequestTimeInterval)
+        request?.timeoutInterval = TimeInterval(CoreServiceConstants.CSCDefaultRequestTimeInterval)
         isFinished = false
         return true
     }
     
-    //MARK:- URLSessionDelegate methods
+    //MARK: - URLSessionDelegate methods
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         print("session error: \(String(describing: error?.localizedDescription)).")
     }
@@ -69,7 +71,7 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
         //NOP
     }
 
-    //MARK:- URLSessionTaskDelegate methods
+    //MARK: - URLSessionTaskDelegate methods
     //Always called irrespective of the task is Data task, Download task or Upload task.
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         do {
@@ -77,12 +79,12 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
             
             let taskDictionary = wTaskTable?.object(forKey: task)
             
-            let tempFilepath = taskDictionary!.value(forKey: ServiceConstants.SCServiceTemporaryFilePathKey)
+            let tempFilepath = taskDictionary!.value(forKey: CoreServiceConstants.CSCServiceTemporaryFilePathKey)
             if tempFilepath != nil {
                 try FileManager.default.removeItem(atPath: tempFilepath as! String)
             }
             
-            let responseData: NSMutableData? = taskDictionary!.value(forKey: ServiceConstants.SCServiceResponseData) as? NSMutableData
+            let responseData: NSMutableData? = taskDictionary!.value(forKey: CoreServiceConstants.CSCServiceResponseData) as? NSMutableData
             
             Log.sharedInstance.logDebug(fileComponent(#file), message: "Received data = \((String.init(data: responseData! as Data, encoding:String.Encoding.utf8)).debugDescription)")
             
@@ -93,6 +95,8 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
                 //Form the Error from URLSession error using ErrorHandler.
                 if (error! as NSError).code != NSURLErrorCancelled {
                     delegate?.serviceDidReceiveResponseForRequest(self, data: nil, error: error, uniqueRequestIdentifier: task.taskDescription)
+                } else if responseData != nil {
+                    delegate?.serviceDidReceiveResponseForRequest(self, data: responseData, error: error, uniqueRequestIdentifier: task.taskDescription)
                 }
             } else {
                 delegate?.serviceDidReceiveResponseForRequest(self, data: responseData, error: nil, uniqueRequestIdentifier: task.taskDescription)
@@ -104,7 +108,7 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
         }
     }
     
-    //MARK:- URLSessionDataDelegate methods
+    //MARK: - URLSessionDataDelegate methods
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         Log.sharedInstance.logDebug(fileComponent(#file), message: "Session received first response! \(response)")
         
@@ -115,17 +119,19 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         //This means the status code is non 200; so we need to retrieve the error response in the form of JSON.
         let taskDictionary = wTaskTable?.object(forKey: dataTask)
-        let responseData = taskDictionary?.value(forKey: ServiceConstants.SCServiceResponseData) as? NSMutableData
-        if (dataTask.response as? HTTPURLResponse)?.statusCode != 200 {
-            dataTask.cancel()
-            return
-        } else if responseData != nil {
+        let responseData = taskDictionary?.value(forKey: CoreServiceConstants.CSCServiceResponseData) as? NSMutableData
+        if responseData != nil {
             responseData!.append(data as Data)
             Log.sharedInstance.logDebug(fileComponent(#file), message: "Received data = \((String.init(data: responseData! as Data, encoding: String.Encoding.utf8)).debugDescription)")
         }
+        
+        if (dataTask.response as? HTTPURLResponse)?.statusCode != 200 {
+            dataTask.cancel()
+            return
+        }
     }
     
-    //MARK:- URLSessionDownloadDelegate methods
+    //MARK: - URLSessionDownloadDelegate methods
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         if downloadTask.state == URLSessionTask.State.canceling {
             return
@@ -135,7 +141,7 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
         
         //Check if the http response from the download task contains the http header with content disposition.
         let taskDictionary = wTaskTable?.object(forKey: downloadTask)
-        let progressDictionary: NSMutableDictionary? = taskDictionary!.object(forKey: ServiceConstants.SCServiceProgressDictionaryKey) as? NSMutableDictionary
+        let progressDictionary: NSMutableDictionary? = taskDictionary!.object(forKey: CoreServiceConstants.CSCServiceProgressDictionaryKey) as? NSMutableDictionary
         var filename: NSString? = taskDictionary!.value(forKey: ClientFrameworkCommons.ClientTaskFilename) as? NSString
         if filename != nil {
             //This means the filename hasn't been populated yet; this is the 1st progress callback.
@@ -143,7 +149,7 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
             let response: HTTPURLResponse? = downloadTask.response as? HTTPURLResponse
             Log.sharedInstance.logError(fileComponent(#file), message: "[[Download Task did write data: response:\(response!)]]")
             
-            filename = getFilenameFrom(string: (response!.allHeaderFields as NSDictionary).value(forKey: ServiceConstants.SCHTTPHeaderContentDisposition) as? String) as NSString?
+            filename = getFilenameFrom(string: (response!.allHeaderFields as NSDictionary).value(forKey: CoreServiceConstants.CSCHTTPHeaderContentDisposition) as? String) as NSString?
             if filename != nil {
                 filename = filename!.removingPercentEncoding as NSString?
                 Log.sharedInstance.logError(fileComponent(#file), message: "[[Download Task did write data: filename:\(filename!)]]")
@@ -173,17 +179,17 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
         let taskDictionary = wTaskTable?.object(forKey: downloadTask)
         var filename: NSString? = taskDictionary!.value(forKey: ClientFrameworkCommons.ClientTaskFilename) as? NSString
         if filename == nil {
-            filename = getFilenameFrom(string: (response!.allHeaderFields as NSDictionary).value(forKey: ServiceConstants.SCHTTPHeaderContentDisposition) as? String) as NSString?
+            filename = getFilenameFrom(string: (response!.allHeaderFields as NSDictionary).value(forKey: CoreServiceConstants.CSCHTTPHeaderContentDisposition) as? String) as NSString?
         }
         if filename == nil {
             Log.sharedInstance.logError(fileComponent(#file), message: "Content-Disposition/Filename is missing!!!")
             Log.sharedInstance.logError(fileComponent(#file), message: "Erroneous Response:\(downloadTask.response!)")
-            let error: NSError = NSError.init(domain: ServiceConstants.SCServiceDomain, code: 1, userInfo: ["ErrorMessage" : "Proper filename not found. Seems like something is wrong."])
+            let error: NSError = NSError.init(domain: CoreServiceConstants.CSCServiceDomain, code: 1, userInfo: ["ErrorMessage" : "Proper filename not found. Seems like something is wrong."])
             (taskDictionary as! NSMutableDictionary)["error"] = error
             return
         }
         
-        let localURL: NSURL? = taskDictionary!.object(forKey: ServiceConstants.SCServiceLocalFileURLKey) as? NSURL
+        let localURL: NSURL? = taskDictionary!.object(forKey: CoreServiceConstants.CSCServiceLocalFileURLKey) as? NSURL
         let localFilepath: String? = localURL!.path
         
         Log.sharedInstance.logDebug(fileComponent(#file), message: "Local filepath with filename received in the response:\(localFilepath.debugDescription)")
@@ -194,17 +200,17 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
             }
             
             try FileManager.default.moveItem(atPath: location.path, toPath:localFilepath!)
-            (taskDictionary as! NSMutableDictionary)[ServiceConstants.SCServiceLocalFileURLKey] = NSURL.fileURL(withPath: localFilepath!)
+            (taskDictionary as! NSMutableDictionary)[CoreServiceConstants.CSCServiceLocalFileURLKey] = NSURL.fileURL(withPath: localFilepath!)
         } catch {
             Log.sharedInstance.logError(fileComponent(#file), message: "Error: \(error)")
         }
     }
     
-    //MARK:- URLSessionUploadDelegate methods
+    //MARK: - URLSessionUploadDelegate methods
     public func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
         let taskDictionary = wTaskTable?.object(forKey: task)
         if taskDictionary != nil {
-            let progressDictionary: NSMutableDictionary? = taskDictionary!.object(forKey: ServiceConstants.SCServiceProgressDictionaryKey) as? NSMutableDictionary
+            let progressDictionary: NSMutableDictionary? = taskDictionary!.object(forKey: CoreServiceConstants.CSCServiceProgressDictionaryKey) as? NSMutableDictionary
             if progressDictionary != nil {
                 Log.sharedInstance.logDebug(fileComponent(#file), message: "Upload Task did send data: bytesSent:\(bytesSent), totalBytesSent:\(totalBytesSent), totalBytesExpectedToSend:\(totalBytesExpectedToSend)")
                 //progressDictionary?[ClientFrameworkCommons.ClientTaskFilename] = ""
@@ -219,7 +225,7 @@ open class RESTService : Service, URLSessionDelegate, URLSessionTaskDelegate, UR
     func getFilenameFrom(string: String?) -> String? {
         if let _string: String = string {
             let fileNameString: NSString = _string as NSString
-            let startRange: NSRange = fileNameString.range(of: ServiceConstants.SCContentDispositionFileName)
+            let startRange: NSRange = fileNameString.range(of: CoreServiceConstants.CSCContentDispositionFileName)
             if startRange.location != NSNotFound && startRange.length != NSNotFound {
                 let filenameStart = startRange.location + startRange.length
                 let endRange: NSRange = fileNameString.range(of: " ", options: NSString.CompareOptions.literal, range: NSMakeRange(filenameStart, (_string as NSString).length - filenameStart), locale: nil)

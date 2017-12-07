@@ -149,7 +149,7 @@ public class Log {
         registerUncaughtExceptionHandler()
     }
     
-    //MARK: Log methods, log file rotation, log message formatter methods.
+    //MARK: - Log methods, log file rotation, log message formatter methods.
     /**
          Logs the message at Error level and above.
 
@@ -344,7 +344,7 @@ public class Log {
         UserDefaults.standard.removeObject(forKey: CSHD)
     }
     
-    //MARK: Getting the log zip file or directory.
+    //MARK: - Getting the log zip file or directory.
     ///Returns path for the logs directory.
     public func getLogDirectory() -> String {
 //        let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)

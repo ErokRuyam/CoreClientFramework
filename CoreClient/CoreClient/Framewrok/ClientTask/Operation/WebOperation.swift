@@ -51,7 +51,7 @@ open class WebOperation: CoreOperation, WebOperationProtocol {
      The Client achieves it's functionality by using service, tasks, operations etc.
      Because Client holds a service instance for it's lifetime, the operations are not needed to hold the strong reference of the same.
      */
-    var service: Service
+    public var service: Service
     
     /*
      Uniquely identifies the web service request - be it REST endpoint or SOAP method.
@@ -60,20 +60,20 @@ open class WebOperation: CoreOperation, WebOperationProtocol {
      An implementor (which can choose to implement all the protocols & semantics of the framework from the grounds up) of
      the framework may choose to define different enum for it's specific endpoints.
      */
-    init(theService: Service) {
+    public init(theService: Service) {
         service = theService
         super.init()
     }
     
-    public func prepareRequest() {
+    open func prepareRequest() {
         NSException(name: NSExceptionName(rawValue: "InvalidSelectorException"), reason: "Invalid method call: -prepareRequest: can't be executed on abstract WebOperation instance!", userInfo: nil).raise()
     }
     
-    public func processResponse(_ data: AnyObject?, error: Error?, callbackQueue: AnyObject?) {
+    open func processResponse(_ data: AnyObject?, error: Error?, callbackQueue: AnyObject?) {
         NSException(name: NSExceptionName(rawValue: "InvalidSelectorException"), reason: "Invalid method call: -processResponse:error: can't be executed on abstract WebOperation instance!", userInfo: nil).raise()
     }
     
-    public func processProgressUpdate(_ progressDictionary: NSDictionary?) {
+    open func processProgressUpdate(_ progressDictionary: NSDictionary?) {
         client!.clientTaskHasProgressUpdate(wrapperTask, progressDictionary: progressDictionary, error: nil)
     }
 }

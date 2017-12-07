@@ -220,9 +220,8 @@ open class JSONSerializable {
                 if str != "nil" {
                     // Some optional values cannot be unpacked if type is "Any"
                     // We remove the "Optional(" and last ")" from the value by string manipulation
-                    let range = str.characters.index(str.startIndex, offsetBy: 9)..<str.characters.index(str.endIndex, offsetBy: -1)
+                    let range = str.index(str.startIndex, offsetBy: 9)..<str.index(str.endIndex, offsetBy: -1)
                     handledValue = String(str[range])
-                    
                 } else {
                     handledValue = "null"
                 }

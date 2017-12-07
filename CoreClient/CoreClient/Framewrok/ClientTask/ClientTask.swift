@@ -41,15 +41,15 @@ public enum ClientTaskType: Int {
 }
 
 open class ClientTask: NSObject {
-    var operationToPerform: CoreOperation
-    var taskType: ClientTaskType = ClientTaskType.none
-    var isCancelled: Bool = false
+    public var operationToPerform: CoreOperation
+    public var taskType: ClientTaskType = ClientTaskType.none
+    public var isCancelled: Bool = false
     //A task is nothing but a wrapper around Operation; so it's identity is tied to it.
     override open var hashValue: Int {
         return operationToPerform.hash
     }
     
-    init(operation: CoreOperation) {
+    public init(operation: CoreOperation) {
         operationToPerform = operation
     }
     
@@ -57,15 +57,15 @@ open class ClientTask: NSObject {
      Every task MUST need to have a corresponding client set on it.
      Once a task is created but before it's submitted for execution, one MUST set the client using this method.
      */
-    func setClient(_ client: Client) {
+    public func setClient(_ client: Client) {
         operationToPerform.client = client
     }
-    
-    func client() -> Client {
+
+    public func client() -> Client {
         return operationToPerform.client!
     }
-    
-    func completionHandler() -> ClientCompletionHandler {
+
+    public func completionHandler() -> ClientCompletionHandler {
         return operationToPerform.completionHandler!
     }
     
@@ -98,7 +98,7 @@ open class ClientTask: NSObject {
         }
     }
     
-    func cancel() {
+    public func cancel() {
         //Logger.sharedInstance.logDebug(fileComponent(#file), message: "1. Client Task Cancelling...!!!")
         if !operationToPerform.isFinished && !operationToPerform.isCancelled {
             operationToPerform.cancel()

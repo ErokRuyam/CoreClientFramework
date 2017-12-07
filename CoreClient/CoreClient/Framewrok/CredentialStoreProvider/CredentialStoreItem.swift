@@ -19,7 +19,7 @@ public enum CredentialStoreItemType: Int {
 open class CredentialStoreItem {
     var itemType: CredentialStoreItemType
     var itemTag: String
-    var itemData: Data
+    var itemData: Data?
     var isShared: Bool
     /**
      CreadentialStoreItem object to be stores inside CredentialStoreProvider.
@@ -30,7 +30,7 @@ open class CredentialStoreItem {
      - parameter itemData: Actual data for the item to be store inside CredentialStoreProvider/Keychain.
      - parameter isShared: Is this item shared under any shared access group.
      */
-    init(itemType: CredentialStoreItemType, itemTag: String, itemData: Data, isShared: Bool) {
+    public init(itemType: CredentialStoreItemType, itemTag: String, itemData: Data?, isShared: Bool) {
         self.itemType = itemType
         self.itemTag = itemTag
         self.itemData = itemData

@@ -16,8 +16,8 @@ class TestService: RESTService {
         
         let request: NSMutableURLRequest = NSMutableURLRequest.init(url: getPlaceURL)
         request.httpShouldHandleCookies = false
-        request.httpMethod = ServiceConstants.SCHTTPHeaderMethodGet
-        request.setValue(ServiceConstants.SCHTTPHeaderContentTypeJson, forHTTPHeaderField: ServiceConstants.SCHTTPHeaderContentType)
+        request.httpMethod = CoreServiceConstants.CSCHTTPHeaderMethodGet
+        request.setValue(CoreServiceConstants.CSCHTTPHeaderContentTypeJson, forHTTPHeaderField: CoreServiceConstants.CSCHTTPHeaderContentType)
         let status = prepareRequest(request, errorHandler:errorHandler)
         if !status {
             return nil
@@ -25,8 +25,8 @@ class TestService: RESTService {
         
         let getPlaceTask: URLSessionDataTask = (defaultSession?.dataTask(with: request as URLRequest))!
         let taskDictionary: NSMutableDictionary = NSMutableDictionary.init()
-        taskDictionary[ServiceConstants.SCServiceResponseData] = NSMutableData.init()
-        taskDictionary[ServiceConstants.SCServiceRequestIDKey] = NSNumber.init(value: 0)
+        taskDictionary[CoreServiceConstants.CSCServiceResponseData] = NSMutableData.init()
+        taskDictionary[CoreServiceConstants.CSCServiceRequestIDKey] = NSNumber.init(value: 0)
         wTaskTable?.setObject(taskDictionary, forKey: getPlaceTask)
         return getPlaceTask
     }

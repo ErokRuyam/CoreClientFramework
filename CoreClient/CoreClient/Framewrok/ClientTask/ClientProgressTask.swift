@@ -42,7 +42,7 @@ open class ClientProgressTask: ClientTask, ClientProgressTaskProtocol {
         removeAllProgressHandlers()
     }
     
-    override func cancel() {
+    override public func cancel() {
 //        Logger.sharedInstance.logDebug(fileComponent(#file), message: "1. Client Task Cancelled!!!")
         if !operationToPerform.isFinished && !operationToPerform.isCancelled {
             operationToPerform.cancel()

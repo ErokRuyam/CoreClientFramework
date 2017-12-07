@@ -32,7 +32,7 @@ public protocol ClientProtocol {
      @domainName - the domain name for which to find out the list of IP addresses.
      @completionHandler - the completion handler block to execute; can be nil.
      */
-    func lookupDomainWithServiceMethod(_ domainName: String?, serviceMethod: Selector?) -> ClientTask?
+    func lookupDomain(_ domainName: String?, WithServiceMethod serviceMethod: Selector?) -> ClientTask?
     
     /**
      Before making any meaningful API calls to the server (including login), client will need to do a handshake with server.
@@ -89,4 +89,9 @@ extension ClientProtocol {
     public func clientTaskFinishCompletionHandlerWithResult(_ clientTask: ClientTask?, data: AnyObject?, error: Error?) {
         //Default implementation does nothing
     }
+    
+    public func lookupDomain(_ domainName: String?, WithServiceMethod serviceMethod: Selector?) -> ClientTask? {
+        return nil
+    }
+
 }

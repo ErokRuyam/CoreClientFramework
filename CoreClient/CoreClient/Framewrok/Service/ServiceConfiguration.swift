@@ -17,8 +17,6 @@ open class ServiceConfiguration {
     //Disabled by default; so default value is NO
     public var shallAttachRunLoop: Bool = false
     
-    init() {
-        allowsSelfSignedServerCertificates = false
-        shallAttachRunLoop = false
+    public init() {
     }
 }

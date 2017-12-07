@@ -8,6 +8,8 @@
 
 import Foundation
 
+//The following strings are used as a suffix to the itemTag string passed to KeychainManager methods.
+//The resulting string is used as the values for attributes - kSecAttrAccount & kSecAttrService respectively.
 let SecurityKeychainItemAccountAttributeSuffix = "KMPasswordAccount"
 let SecurityKeychainItemServiceAttributeSuffix = "KMPasswordService"
 

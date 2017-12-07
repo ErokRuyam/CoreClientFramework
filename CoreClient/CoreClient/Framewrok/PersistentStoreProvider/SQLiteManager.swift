@@ -30,6 +30,8 @@ open class SQLiteManager: RelationalPersistentStoreProvider {
     fileprivate var statement: OpaquePointer? //The prepared statment corresponding to the currently executed SQL query.
     public var dbError: NSError?
     
+    public init() {}
+    
     //Prepare an error object at a single place to be returned to the client of this class.
     func prepareError() {
         dbError = NSError.init(domain: SQLITE_ERROR_DOMAIN, code: sqlite3_errcode(db!).hashValue, userInfo: ["errorMessage" : "\(sqlite3_errmsg(db))"])
